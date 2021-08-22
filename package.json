@@ -1,6 +1,6 @@
 {
   "name": "Discord",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "main": "index.js",
   "description": "Discord Native for M1 Macs",
   "author": {
@@ -19,7 +19,7 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "electron-builder install-app-deps",
-    "start": "electron --disable-gpu .",
+    "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder"
   },
@@ -40,21 +40,14 @@
   "build": {
     "appId": "Discord-m1",
     "extends": null,
-    "extraResources": ["inject.js"],
+    "extraResources": ["inject.js", "inject.css"],
     "mac": {
       "category" : "public.app-category.social-networking",
       "target": [
         "dmg"
       ],
       "icon" : "icon.icns",
-      "darkModeSupport" : "true",
-      "publish": [
-        {
-          "provider": "github",
-          "owner": "17hoehbr",
-          "repo": "Discord-m1"
-        }
-      ]
+      "darkModeSupport" : "true"
     }
   }
 }

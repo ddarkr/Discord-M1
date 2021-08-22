@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, shell, protocol } = require('electron');
 const fs = require('fs');
 
 // https://discuss.atom.io/t/how-to-catch-the-event-of-clicking-the-app-windows-close-button-in-electron-app/21425
@@ -17,7 +17,7 @@ function createWindow() {
     // Window state
     let mainWindowState = windowStateKeeper({
         defaultWidth: 1000,
-        defaultHeight: 800
+        defaultHeight: 800,
     });
     // Create the browser window.
     const path = require('path');
@@ -36,8 +36,9 @@ function createWindow() {
             plugins: true,
             nodeIntegration: false,
             contextIsolation: true,
-            sandbox: true
-        }
+            sandbox: true,
+        },
+        titleBarStyle: 'hiddenInset'
     });
 
     // Let us register listeners on the window, so we can update the state
@@ -50,13 +51,20 @@ function createWindow() {
     win.setAutoHideMenuBar(true);
     
     win.loadURL("https://discord.com/app",
-    {userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0'});
+    {userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36'});
 
     // Inject custom JavaScript
-    let injectFilePath = path.join(process.resourcesPath, 'inject.js');
-    if (!fs.existsSync(injectFilePath)) injectFilePath = './inject.js';
-    fs.readFile(injectFilePath, 'utf-8', (_, data) => {
+    let injectJSPath = path.join(process.resourcesPath, 'inject.js');
+    if (!fs.existsSync(injectJSPath)) injectJSPath = './inject.js';
+    fs.readFile(injectJSPath, 'utf-8', (_, data) => {
         win.webContents.executeJavaScript(data);
+    });
+
+    // Inject custom CSS
+    let injectCSSPath = path.join(process.resourcesPath, 'inject.css');
+    if (!fs.existsSync(injectCSSPath)) injectCSSPath = './inject.css';
+    fs.readFile(injectCSSPath, 'utf-8', (_, data) => {
+        win.webContents.insertCSS(data);
     });
 
     win.webContents.on('new-window', (e, url) => {
@@ -83,6 +91,14 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+    protocol.interceptFileProtocol('file', (request, callback) => {
+        const url = request.url.substr(7)    /* all urls start with 'file://' */
+        callback({ path: path.normalize(`${__dirname}/${url}`) })
+      }, (err) => {
+        if (err) console.error('Failed to register protocol')
+      })
+      createWindow()
+
     createWindow()
 })
 
